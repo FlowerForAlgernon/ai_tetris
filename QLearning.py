@@ -1,3 +1,7 @@
+"""
+这份代码使用 Q learning 算法训练并运行俄罗斯方块游戏 ai。其中简化状态空间的方法可参考论文 Adapting Reinforcement Learning to Tetris
+"""
+
 import numpy as np
 from game import *
 
@@ -8,6 +12,9 @@ base = 7
 
 
 def getStateIndex(field_width, field_height, field_map):
+    """
+    因为每一列有 7 种不同的情况，所以采用七进制数来作为状态索引
+    """
     temp = [0 for _ in range(field_width)]
     convert = {}
     for i in range(-(base - 1)//2, (base - 1)//2 + 1):
@@ -83,7 +90,7 @@ class QLearning(Game):
         self.key = [((s, b), (p, d)) for s in range(base**(self.field_width-1)) for b in range(7) for p in range(self.field_width) for d in range(4)]
         self.V = [0 for _ in range(len(self.key))]
         self.Q = dict(zip(self.key, self.V))
-        #self.Q = np.load('QL4.npy').item()
+        #self.Q = np.load('QL.npy').item()
 
     def checkEvents(self):
         for event in pygame.event.get():
@@ -167,16 +174,16 @@ class QLearning(Game):
             record.append(self.lines_num)
             if i % 100 == 0:
                 self.alpha *= 0.5
-                np.save('QL4.npy', {"V": self.V})
-                np.save('record_QL4.npy', {"record": record})
-        np.save('QL4.npy', self.Q)
-        np.save('record_QL4.npy', {"record": record})
+                np.save('QL.npy', {"V": self.V})
+                np.save('record_QL.npy', {"record": record})
+        np.save('QL.npy', self.Q)
+        np.save('record_QL.npy', {"record": record})
 
 
 class QLGame(Game):
     def __init__(self):
         super(QLGame, self).__init__(10, 20)
-        self.Q = np.load('QL4.npy', allow_pickle=True).item()
+        self.Q = np.load('QL.npy', allow_pickle=True).item()
         self.col = 0
 
     def checkEvents(self):

@@ -23,5 +23,5 @@ python PierreDellacherie.py
 
 + 使用 Q-learning 算法运行游戏：
 ```shell
-python getQLearning4.py
+python QLearning.py
 ```

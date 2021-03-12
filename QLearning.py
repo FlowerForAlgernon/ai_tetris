@@ -241,7 +241,6 @@ class QLGame(Game):
 if __name__ == '__main__':
     train = QLearning()
     train.train()
-    """
+    
     game = QLGame()
     game.start()
-    """

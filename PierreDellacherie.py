@@ -1,3 +1,7 @@
+"""
+这份代码实现了 Pierre Dellacherie 算法，详情可参考 https://blog.csdn.net/qq_41882147/article/details/80005763
+"""
+
 import os
 import random
 import pygame
@@ -7,6 +11,9 @@ from gameconst import *
 
 
 class PierreDellacherie():
+    """
+    计算特定方块放置情况下 Pierre Dellacherie 算法的经验公式值
+    """
     def __init__(self, field_width, field_height, A):
         self.field_map = None
         self.field_width = field_width
@@ -20,6 +27,9 @@ class PierreDellacherie():
         self.a1, self.a2, self.a3, self.a4, self.a5, self.a6 = A
 
     def copyMap(self, field_map):
+        """
+        复制当前游戏区域，在新的游戏区域上尝试方块不同放置情况
+        """
         self.field_map = [[0] * self.field_width for _ in range(self.field_height)]
         for y in range(self.field_height):
             for x in range(self.field_width):
@@ -52,12 +62,18 @@ class PierreDellacherie():
         return lines
 
     def getLandingHeight(self, position, layout):
+        """
+        计算当前方块放置之后，方块重心距离游戏区域底部的距离
+        """
         self.landing_height = 0
         for (x, y) in layout:
             self.landing_height += self.field_height - (position[1] + y)
         self.landing_height /= 4
 
     def getErodedPieceCellsMetric(self, lines):
+        """
+        计算方块放置后消除的行数与当前摆放的方块中被消除的小方块的格数的乘积
+        """
         self.eroded_piece_cells_metric = 0
         bricks = 0
         for y in range(self.field_height):
@@ -66,6 +82,10 @@ class PierreDellacherie():
         self.eroded_piece_cells_metric = lines * (4 - bricks)
 
     def getBoardRowTransitions(self):
+        """
+        对于游戏区域每一行，从左往右看，从无小方格到有小方格是一种“变换”，从有小方格到无小方格也是一种“变换”。
+        计算方块放置后各行中“变换”之和
+        """
         self.board_row_transitions = 0
         for y in range(self.field_height):
             for x in range(self.field_width - 1):
@@ -79,6 +99,9 @@ class PierreDellacherie():
                 self.board_row_transitions += 1
 
     def getBoardColTransitions(self):
+        """
+        计算方块放置后各列中“变换”之和
+        """
         self.board_col_transitions = 0
         for x in range(self.field_width):
             for y in range(self.field_height - 1):
@@ -90,6 +113,9 @@ class PierreDellacherie():
                 self.board_col_transitions += 1
 
     def getBoardBuriedHoles(self):
+        """
+        计算各列中的“空洞”小方格数之和
+        """
         self.board_buried_holes = 0
         for x in range(self.field_width):
             for y in range(self.field_height - 1):
@@ -97,6 +123,9 @@ class PierreDellacherie():
                     self.board_buried_holes += 1
 
     def getBoardWells(self):
+        """
+        计算各列中“井”的深度的连加和
+        """
         self.board_wells = 0
         for x in range(self.field_width):
             is_hole = False
@@ -136,12 +165,18 @@ class PierreDellacherie():
 
 
 class AI():
+    """
+    找出经验公式值最大的放置方法并放置方块
+    """
     def __init__(self, field_width, field_height, A):
         self.evaluation = PierreDellacherie(field_width, field_height, A)
         self.field_width = field_width
         self.field_height = field_height
 
     def getAllPossibleLocation(self, block, layout, field_map):
+        """
+        找出方块在特定方向下所有可行的放置位置
+        """
         all_possible_position = []
         for x in range(self.field_width):
             if block.isLegal(layout, (x, -4), field_map) is not State.Middle:
@@ -149,12 +184,18 @@ class AI():
         return all_possible_position
 
     def findBottomPosition(self, block, x, layout, field_map):
+        """
+        找出方块最终下落到底部方块的堆顶的位置
+        """
         y = -4
         while block.isLegal(layout, (x, y), field_map) is not State.Bottom:
             y += 1
         return y - 1
 
     def dropBlock(self, x0, y0, layout, field_map):
+        """
+        模拟将方块放置到目标底部位置上的情况
+        """
         for (x, y) in layout:
             if 0 <= y0 + y < self.field_height:
                 field_map[y0 + y][x0 + x] = 1
@@ -163,6 +204,9 @@ class AI():
         return True
 
     def resetMap(self, field_map):
+        """
+        将游戏区域恢复到方块放置前，删除方块模拟放置信息
+        """
         count = 0
         for y in range(self.field_height):
             for x in range(self.field_width):
@@ -173,6 +217,9 @@ class AI():
                     return
 
     def getNewMap(self, block, position, direction, field_map):
+        """
+        通过游戏提供的接口将方块移动到目标位置
+        """
         while block.direction is not direction:
             block.rotate(field_map)
         while block.position[0] > position[0]:
